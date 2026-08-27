@@ -1,0 +1,5 @@
+# Nao versionar planilhas/binarios com dados reais
+*.xls
+*.xlsx
+*.xlsm
+*.csv
