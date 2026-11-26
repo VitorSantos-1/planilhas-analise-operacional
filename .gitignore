@@ -3,3 +3,8 @@
 *.xlsx
 *.xlsm
 *.csv
+
+# Permite apenas a planilha ficticia de demonstracao do modulo de orcamento
+!orcamento-compras-vba-etl/data_exemplo/orcamento_exemplo.xlsx
+__pycache__/
+.env

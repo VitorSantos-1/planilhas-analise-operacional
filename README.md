@@ -1,4 +1,4 @@
-# Análises em Excel para Varejo — Precificação, Acordos e Conciliação
+# Planilhas & Orçamento Operacional — Precificação, Acordos, Conciliação e VBA/ETL
 
 Coletânea de análises construídas em Excel para a operação de uma rede de supermercados, cobrindo
 precificação e margem, controle de acordos comerciais (verbas e notas de débito), conciliação de NFDs
@@ -131,12 +131,64 @@ da categoria ao longo do período.
 
 ---
 
+## 4. Orçamento Automatizado de Compras (Excel/VBA + ETL Python/MySQL)
+
+Pasta dedicada neste repositório: [`orcamento-compras-vba-etl/`](./orcamento-compras-vba-etl/)
+
+Automação ponta a ponta do orçamento de compras das lojas em duas frentes complementares:
+1. **Padronização & Consolidação na Planilha (`vba/Módulo*.bas`):** Macros em VBA que organizam e consolidam automaticamente a planilha operacional de orçamento (`orcamento.xlsm`).
+2. **Ingestão Analítica em Star Schema (`script_orcamento.py` + `sql/schema.sql`):** Pipeline ETL em Python (`Pandas` + `SQLAlchemy`) com carga incremental **UPSERT** (`FK_Tempo + FK_Loja + FK_Mercadologico + FK_Comprador`) alimentando um Data Warehouse MySQL para acompanhamento semanal de **Meta × Compra Realizada × Venda × CMV** por loja, categoria e comprador.
+
+```mermaid
+erDiagram
+    Dim_Tempo ||--o{ Fato_OrcamentoCompras : "quando"
+    Dim_Loja ||--o{ Fato_OrcamentoCompras : "onde"
+    Dim_Mercadologico ||--o{ Fato_OrcamentoCompras : "categoria"
+    Dim_Comprador ||--o{ Fato_OrcamentoCompras : "quem"
+
+    Dim_Loja {
+        int PK_Loja PK
+        int Codigo_Loja
+        varchar Nome_Loja UK
+    }
+    Dim_Mercadologico {
+        int PK_Mercadologico PK
+        varchar Nome_Mercadologico UK
+    }
+    Dim_Comprador {
+        int PK_Comprador PK
+        varchar Nome_Comprador UK
+    }
+    Dim_Tempo {
+        int PK_Tempo PK
+        date Data_Inicio_Semana UK
+        smallint Ano
+        tinyint Mes
+        tinyint Numero_Semana "1..5"
+    }
+    Fato_OrcamentoCompras {
+        bigint PK_Fato PK
+        int FK_Tempo FK
+        int FK_Loja FK
+        int FK_Mercadologico FK
+        int FK_Comprador FK
+        decimal Venda_Semana
+        decimal CMV_Semana
+        decimal Meta_Orcamento_Semana
+        decimal Compra_Realizada_Semana
+        decimal Percentual_Execucao_Meta
+    }
+```
+
+---
+
 ## Como Este Repositório Está Organizado
 
 ```text
 README.md    -> Documentação das análises (negócio + cálculos)
 docs/        -> Reservado para os prints das planilhas (dados sensíveis tarjados) — a adicionar
-.gitignore   -> Impede o versionamento de planilhas com dados reais (.xls/.xlsx/.xlsm/.csv)
+.gitignore                  -> Impede o versionamento de planilhas com dados reais (.xls/.xlsx/.xlsm/.csv)
+orcamento-compras-vba-etl/  -> Macros VBA, DDL Star Schema MySQL, ETL Python (UPSERT) e planilha exemplo fictícia
 ```
 
 ## Autor
